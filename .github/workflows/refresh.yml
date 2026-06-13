@@ -15,5 +15,3 @@ jobs:
       - uses: actions/checkout@v4
 
       - run: node .github/scripts/refresh-models.mjs
-        env:
-          CMD_API_KEY: ${{ secrets.CMD_API_KEY }}

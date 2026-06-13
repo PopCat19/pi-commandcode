@@ -3,19 +3,13 @@
 // Purpose: Refetch commandcode /v1/models, regenerate models.json, commit & push if changed.
 //
 // Usage:   node .github/scripts/refresh-models.mjs
-// Env:     CMD_API_KEY (required)
+// Env:     none (models endpoint is public)
 
 import { execSync } from "node:child_process";
 import { writeFileSync } from "node:fs";
 
 const API = "https://api.commandcode.ai/provider/v1/models";
 const MODELS_PATH = "extensions/commandcode/models.json";
-
-const apiKey = process.env.CMD_API_KEY;
-if (!apiKey) {
-  console.error("CMD_API_KEY not set");
-  process.exit(1);
-}
 
 // --- classification (mirrors index.ts) ------------------------------------
 
@@ -54,7 +48,7 @@ function classify(m) {
 
 // --- main -----------------------------------------------------------------
 
-const resp = await fetch(API, { headers: { Authorization: `Bearer ${apiKey}` } });
+const resp = await fetch(API);
 if (!resp.ok) {
   console.error(`API returned ${resp.status} ${resp.statusText}`);
   process.exit(1);

@@ -129,9 +129,7 @@ export default async function (pi: ExtensionAPI) {
   let models: CommandCodeModelEntry[];
 
   try {
-    const resp = await fetch(MODELS_ENDPOINT, {
-      headers: { Authorization: `Bearer ${apiKey}` },
-    });
+    const resp = await fetch(MODELS_ENDPOINT);
 
     if (!resp.ok) {
       console.error(
