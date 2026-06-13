@@ -1,0 +1,21 @@
+name: Refresh models.json
+
+on:
+  schedule:
+    - cron: "0 */6 * * *" # every 6 hours
+  workflow_dispatch: {}    # manual trigger
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_TOKEN }}
+
+      - run: node .github/scripts/refresh-models.mjs
+        env:
+          CMD_API_KEY: ${{ secrets.CMD_API_KEY }}
