@@ -27,41 +27,29 @@ const ENV_KEY = "CMD_API_KEY";
 const CLAUDE_PATTERNS: RegExp[] = [/^claude-/];
 
 /** Model IDs known to support thinking / reasoning. */
-const THINKING_PATTERNS: RegExp[] = [
-  /^claude-/,
-  /^deepseek\//,
-  /^moonshotai\/Kimi/,
-  /^zai-org\/GLM/,
-  /^Qwen\/Qwen3/,
-];
+const THINKING_PATTERNS: RegExp[] = [/^claude-/, /^deepseek\//, /^moonshotai\/Kimi/, /^zai-org\/GLM/, /^Qwen\/Qwen3/];
 
 /** Model IDs known to support vision / image input. */
-const VISION_PATTERNS: RegExp[] = [
-  /^claude-/,
-  /^google\/gemini/,
-  /^moonshotai\/Kimi/,
-  /^zai-org\/GLM/,
-  /^MiniMaxAI\//,
-];
+const VISION_PATTERNS: RegExp[] = [/^claude-/, /^google\/gemini/, /^moonshotai\/Kimi/, /^zai-org\/GLM/, /^MiniMaxAI\//];
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 function matchesAny(id: string, patterns: RegExp[]): boolean {
-  return patterns.some((p) => p.test(id));
+	return patterns.some((p) => p.test(id));
 }
 
 function isClaudeModel(id: string): boolean {
-  return matchesAny(id, CLAUDE_PATTERNS);
+	return matchesAny(id, CLAUDE_PATTERNS);
 }
 
 /** Guess maxTokens from model name heuristics. */
 function guessMaxTokens(id: string, name: string): number {
-  const lower = `${id} ${name}`.toLowerCase();
-  if (lower.includes("pro") || lower.includes("ultra") || lower.includes("max")) return 65_536;
-  if (lower.includes("flash") || lower.includes("mini") || lower.includes("lite")) return 16_384;
-  return 32_768;
+	const lower = `${id} ${name}`.toLowerCase();
+	if (lower.includes("pro") || lower.includes("ultra") || lower.includes("max")) return 65_536;
+	if (lower.includes("flash") || lower.includes("mini") || lower.includes("lite")) return 16_384;
+	return 32_768;
 }
 
 // ---------------------------------------------------------------------------
@@ -69,17 +57,17 @@ function guessMaxTokens(id: string, name: string): number {
 // ---------------------------------------------------------------------------
 
 interface CommandCodeModelsResponse {
-  object: string;
-  data: CommandCodeModelEntry[];
+	object: string;
+	data: CommandCodeModelEntry[];
 }
 
 interface CommandCodeModelEntry {
-  id: string;
-  object: string;
-  created: number;
-  owned_by: string;
-  name: string;
-  context_length: number;
+	id: string;
+	object: string;
+	created: number;
+	owned_by: string;
+	name: string;
+	context_length: number;
 }
 
 // ---------------------------------------------------------------------------
@@ -87,102 +75,100 @@ interface CommandCodeModelEntry {
 // ---------------------------------------------------------------------------
 
 function buildModelConfig(entry: CommandCodeModelEntry): ProviderModelConfig {
-  const id = entry.id;
-  const name = entry.name;
-  const hasThinking = matchesAny(id, THINKING_PATTERNS);
-  const hasVision = matchesAny(id, VISION_PATTERNS);
+	const id = entry.id;
+	const name = entry.name;
+	const hasThinking = matchesAny(id, THINKING_PATTERNS);
+	const hasVision = matchesAny(id, VISION_PATTERNS);
 
-  const cfg: ProviderModelConfig = {
-    id,
-    name,
-    reasoning: hasThinking,
-    input: hasVision ? ["text", "image"] : ["text"],
-    contextWindow: entry.context_length,
-    maxTokens: guessMaxTokens(id, name),
-    cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
-  };
+	const cfg: ProviderModelConfig = {
+		id,
+		name,
+		reasoning: hasThinking,
+		input: hasVision ? ["text", "image"] : ["text"],
+		contextWindow: entry.context_length,
+		maxTokens: guessMaxTokens(id, name),
+		cost: { input: 0, output: 0, cacheRead: 0, cacheWrite: 0 },
+	};
 
-  if (hasThinking) {
-    cfg.thinkingLevelMap = {
-      off: "none",
-      minimal: "low",
-      low: "low",
-      medium: "medium",
-      high: "high",
-      xhigh: "high",
-    };
-  }
+	if (hasThinking) {
+		cfg.thinkingLevelMap = {
+			off: "none",
+			minimal: "low",
+			low: "low",
+			medium: "medium",
+			high: "high",
+			xhigh: "high",
+		};
+	}
 
-  return cfg;
+	return cfg;
 }
 
 // ---------------------------------------------------------------------------
 // Main extension factory
 // ---------------------------------------------------------------------------
 export default async function (pi: ExtensionAPI) {
-  const apiKey = process.env[ENV_KEY];
-  if (!apiKey) {
-    console.error(`[commandcode] ${ENV_KEY} not set -- skipping dynamic model fetch`);
-    return;
-  }
+	const apiKey = process.env[ENV_KEY];
+	if (!apiKey) {
+		console.error(`[commandcode] ${ENV_KEY} not set -- skipping dynamic model fetch`);
+		return;
+	}
 
-  let models: CommandCodeModelEntry[];
+	let models: CommandCodeModelEntry[];
 
-  try {
-    const resp = await fetch(MODELS_ENDPOINT);
+	try {
+		const resp = await fetch(MODELS_ENDPOINT);
 
-    if (!resp.ok) {
-      console.error(
-        `[commandcode] /v1/models returned ${resp.status} ${resp.statusText} -- falling back to models.json`
-      );
-      return;
-    }
+		if (!resp.ok) {
+			console.error(`[commandcode] /v1/models returned ${resp.status} ${resp.statusText} -- falling back to models.json`);
+			return;
+		}
 
-    const payload = (await resp.json()) as CommandCodeModelsResponse;
-    if (!payload.data?.length) {
-      console.error("[commandcode] /v1/models returned zero models -- falling back to models.json");
-      return;
-    }
+		const payload = (await resp.json()) as CommandCodeModelsResponse;
+		if (!payload.data?.length) {
+			console.error("[commandcode] /v1/models returned zero models -- falling back to models.json");
+			return;
+		}
 
-    models = payload.data;
-    console.error(`[commandcode] Discovered ${models.length} models from API`);
-  } catch (err) {
-    console.error(`[commandcode] Error fetching /v1/models: ${err} -- falling back to models.json`);
-    return;
-  }
+		models = payload.data;
+		console.error(`[commandcode] Discovered ${models.length} models from API`);
+	} catch (err) {
+		console.error(`[commandcode] Error fetching /v1/models: ${err} -- falling back to models.json`);
+		return;
+	}
 
-  // Split into Claude (anthropic-messages) and OpenAI/OSS (openai-completions)
-  const claudeModels: ProviderModelConfig[] = [];
-  const openaiModels: ProviderModelConfig[] = [];
+	// Split into Claude (anthropic-messages) and OpenAI/OSS (openai-completions)
+	const claudeModels: ProviderModelConfig[] = [];
+	const openaiModels: ProviderModelConfig[] = [];
 
-  for (const entry of models) {
-    const cfg = buildModelConfig(entry);
-    if (isClaudeModel(entry.id)) {
-      claudeModels.push(cfg);
-    } else {
-      openaiModels.push(cfg);
-    }
-  }
+	for (const entry of models) {
+		const cfg = buildModelConfig(entry);
+		if (isClaudeModel(entry.id)) {
+			claudeModels.push(cfg);
+		} else {
+			openaiModels.push(cfg);
+		}
+	}
 
-  // Register OpenAI-compat provider (non-Claude models)
-  if (openaiModels.length > 0) {
-    pi.registerProvider("commandcode", {
-      baseUrl: API_BASE,
-      apiKey: "$CMD_API_KEY",
-      api: "openai-completions",
-      models: openaiModels,
-    });
-    console.error(`[commandcode] Registered ${openaiModels.length} models under "commandcode" (openai-completions)`);
-  }
+	// Register OpenAI-compat provider (non-Claude models)
+	if (openaiModels.length > 0) {
+		pi.registerProvider("commandcode", {
+			baseUrl: API_BASE,
+			apiKey: "$CMD_API_KEY",
+			api: "openai-completions",
+			models: openaiModels,
+		});
+		console.error(`[commandcode] Registered ${openaiModels.length} models under "commandcode" (openai-completions)`);
+	}
 
-  // Register Anthropic-compat provider (Claude models)
-  if (claudeModels.length > 0) {
-    pi.registerProvider("commandcode-claude", {
-      baseUrl: API_BASE,
-      apiKey: "$CMD_API_KEY",
-      api: "anthropic-messages",
-      models: claudeModels,
-    });
-    console.error(`[commandcode] Registered ${claudeModels.length} models under "commandcode-claude" (anthropic-messages)`);
-  }
+	// Register Anthropic-compat provider (Claude models)
+	if (claudeModels.length > 0) {
+		pi.registerProvider("commandcode-claude", {
+			baseUrl: API_BASE,
+			apiKey: "$CMD_API_KEY",
+			api: "anthropic-messages",
+			models: claudeModels,
+		});
+		console.error(`[commandcode] Registered ${claudeModels.length} models under "commandcode-claude" (anthropic-messages)`);
+	}
 }
