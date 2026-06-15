@@ -1,17 +1,17 @@
 # pi-commandcode
 
-Pi extension — dynamic model discovery with thinking-level support for [CommandCode](https://commandcode.ai) provider API.
+Pi extension, dynamic model discovery with thinking-level support for [CommandCode](https://commandcode.ai) provider API.
 
 Fetches the live model catalog from `https://api.commandcode.ai/provider/v1/models` at startup and registers all available models via `pi.registerProvider()`. Falls back to `models.json` when the API is unreachable.
 
 ## Features
 
-- **Dynamic model list** — no manual `models.json` upkeep; models auto-discovered from CommandCode catalog
-- **Dual provider registration** — Claude models registered under `commandcode-claude` (Anthropic Messages API), all others under `commandcode` (OpenAI Chat Completions API)
-- **Thinking-level support** — maps Pi thinking levels (off→xhigh) to provider `reasoning_effort` (none/low/medium/high)
-- **Vision detection** — models supporting image input get `input: ["text", "image"]`
-- **Context windows** — per-model context sizes from the live API response
-- **Graceful fallback** — keeps whatever `models.json` provides when `/v1/models` is down
+- **Dynamic model list**, no manual `models.json` upkeep; models auto-discovered from CommandCode catalog
+- **Dual provider registration**, Claude models registered under `commandcode-claude` (Anthropic Messages API), all others under `commandcode` (OpenAI Chat Completions API)
+- **Thinking-level support**, maps Pi thinking levels (off→xhigh) to provider `reasoning_effort` (none/low/medium/high)
+- **Vision detection**, models supporting image input get `input: ["text", "image"]`
+- **Context windows**, per-model context sizes from the live API response
+- **Graceful fallback**, keeps whatever `models.json` provides when `/v1/models` is down
 
 ## Thinking-level mapping
 
