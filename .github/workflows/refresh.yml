@@ -14,4 +14,14 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      - name: Configure Git identity for bot commits
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Authenticate Git with GitHub CLI
+        run: gh auth setup-git
+        env:
+          GH_TOKEN: ${{ github.token }}
+
       - run: node .github/scripts/refresh-models.mjs
