@@ -120,20 +120,20 @@ export default async function (pi: ExtensionAPI) {
 		const resp = await fetch(MODELS_ENDPOINT);
 
 		if (!resp.ok) {
-			console.error(`[commandcode] /v1/models returned ${resp.status} ${resp.statusText} -- falling back to models.json`);
+			console.error(`[commandcode] /v1/models returned ${String(resp.status)} ${resp.statusText} -- falling back to models.json`);
 			return;
 		}
 
 		const payload = (await resp.json()) as CommandCodeModelsResponse;
-		if (!payload.data?.length) {
+		if (!payload.data.length) {
 			console.error("[commandcode] /v1/models returned zero models -- falling back to models.json");
 			return;
 		}
 
 		models = payload.data;
-		console.error(`[commandcode] Discovered ${models.length} models from API`);
-	} catch (err) {
-		console.error(`[commandcode] Error fetching /v1/models: ${err} -- falling back to models.json`);
+		console.error(`[commandcode] Discovered ${String(models.length)} models from API`);
+	} catch (err: unknown) {
+		console.error(`[commandcode] Error fetching /v1/models: ${String(err)} -- falling back to models.json`);
 		return;
 	}
 
@@ -158,7 +158,7 @@ export default async function (pi: ExtensionAPI) {
 			api: "openai-completions",
 			models: openaiModels,
 		});
-		console.error(`[commandcode] Registered ${openaiModels.length} models under "commandcode" (openai-completions)`);
+		console.error(`[commandcode] Registered ${String(openaiModels.length)} models under "commandcode" (openai-completions)`);
 	}
 
 	// Register Anthropic-compat provider (Claude models)
@@ -169,6 +169,6 @@ export default async function (pi: ExtensionAPI) {
 			api: "anthropic-messages",
 			models: claudeModels,
 		});
-		console.error(`[commandcode] Registered ${claudeModels.length} models under "commandcode-claude" (anthropic-messages)`);
+		console.error(`[commandcode] Registered ${String(claudeModels.length)} models under "commandcode-claude" (anthropic-messages)`);
 	}
 }
